@@ -10,6 +10,7 @@ const UserMainPage = () => {
   const [voteData, setVoteData] = useState(null); // 오늘의 투표 데이터
   const [timeLeft, setTimeLeft] = useState(""); // 남은 시간
   const [currentVoteSettingId, setCurrentVoteSettingId] = useState(null); // 현재 투표 세팅 ID
+  const [selectedVotes, setSelectedVotes] = useState([]); // 선택된 투표 (후보자 및 선택)
 
   // 유저 ID가 있는 경우 로드 및 상태 초기화
   useEffect(() => {
@@ -56,6 +57,32 @@ const UserMainPage = () => {
     return date.toLocaleDateString("ko-KR", options);
   };
 
+  // 일괄 투표 처리
+  const handleBulkVote = async () => {
+    if (selectedVotes.length === 0) {
+      alert("투표할 항목을 선택해주세요.");
+      return;
+    }
+
+    const confirmation = window.confirm(
+      `한 번 한 결정은 바꿀 수 없습니다.\n정말 "${selectedVotes.map(vote => `${vote.candidate.name}: ${vote.choice}`).join(', ')}"으로 투표하시겠습니까?`
+    );
+    if (!confirmation) return;
+
+    try {
+      await axios.post("http://localhost:3001/api/vote", {
+        userId,
+        voteSettingId: currentVoteSettingId,
+        votes: selectedVotes.map(vote => ({ candidate: vote.candidate.name, choice: vote.choice })),
+      });
+
+      alert("일괄 투표가 완료되었습니다.");
+    } catch (error) {
+      console.error("일괄 투표 중 오류 발생:", error);
+      alert("일괄 투표에 실패했습니다. 다시 시도해주세요.");
+    }
+  };
+
   if (!userId) {
     return <div>아이디가 없습니다. 로그인 페이지로 이동하세요.</div>;
   }
@@ -77,8 +104,20 @@ const UserMainPage = () => {
                 candidate={candidate}
                 voteSettingId={currentVoteSettingId}
                 userId={userId} // 유저 ID 전달
+                selectedVotes={selectedVotes}
+                setSelectedVotes={setSelectedVotes}
               />
             ))}
+          </div>
+
+          {/* 일괄 투표 버튼 */}
+          <div className="mt-8 text-center">
+            <button
+              className="px-6 py-3 bg-green-500 text-white rounded hover:bg-green-600"
+              onClick={handleBulkVote}
+            >
+              투표하기
+            </button>
           </div>
 
           {/* 투표 마감 기한 */}

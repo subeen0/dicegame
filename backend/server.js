@@ -194,6 +194,42 @@ app.get("/api/vote-results", (req, res) => {
     res.status(200).json(results);
   });
 });
+// 특정 투표 세션의 후보별 투표수 집계 API
+app.get("/api/vote-counts/:voteSettingId", (req, res) => {
+  const { voteSettingId } = req.params;
+
+  const query = `
+    SELECT 
+      candidate_name, 
+      choice, 
+      COUNT(*) AS voteCount 
+    FROM vote_results 
+    WHERE vote_setting_id = ?
+    GROUP BY candidate_name, choice
+  `;
+
+  db.query(query, [voteSettingId], (err, results) => {
+    if (err) {
+      console.error("투표 수 조회 중 오류:", err);
+      return res.status(500).json({ error: "투표 수 조회 실패" });
+    }
+
+    // 데이터 가공 (필요시)
+    const formattedResults = results.reduce((acc, { candidate_name, choice, voteCount }) => {
+      if (!acc[candidate_name]) {
+        acc[candidate_name] = {};
+      }
+      acc[candidate_name][choice] = voteCount;
+      return acc;
+    }, {});
+
+    // 콘솔에 데이터 출력
+    console.log("투표 결과 데이터:", formattedResults);
+
+    res.status(200).json(formattedResults);
+  });
+});
+
 
 // 서버 실행
 app.listen(3001, () => {

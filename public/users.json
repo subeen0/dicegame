@@ -19,6 +19,10 @@
     "id": "user5",
     "role": "user"
 },
+{
+  "id": "user6",
+  "role": "user"
+},
     {
       "id": "admindalgu",
       "role": "admin"
