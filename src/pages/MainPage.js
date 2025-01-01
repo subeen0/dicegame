@@ -62,16 +62,16 @@ const handleSubmit = (e) => {
         <div>
           <input
             type="text"
-            placeholder="아이디를 입력하세요"
+            placeholder="아이디를 입력하세요."
             value={userId}
             onChange={handleInputChange}
-            className="w-60 p-3 border border-gray-300 focus:outline-none focus:ring-0 focus:border-gray-300"
+            className="w-60 p-3 border border-gray-300 focus:outline-none focus:ring-0 focus:border-gray-300 font-dosgothic"
             style={{ borderRadius: "0px" }}
           />
         </div>
         <button
           type="submit"
-          className="px-4 py-2 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600"
+          className="px-4 py-2 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 font-dosgothic"
         >
           접속하기
         </button>

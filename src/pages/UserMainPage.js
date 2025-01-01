@@ -57,31 +57,42 @@ const UserMainPage = () => {
     return date.toLocaleDateString("ko-KR", options);
   };
 
-  // 일괄 투표 처리
-  const handleBulkVote = async () => {
-    if (selectedVotes.length === 0) {
-      alert("투표할 항목을 선택해주세요.");
-      return;
-    }
 
-    const confirmation = window.confirm(
-      `한 번 한 결정은 바꿀 수 없습니다.\n정말 "${selectedVotes.map(vote => `${vote.candidate.name}: ${vote.choice}`).join(', ')}"으로 투표하시겠습니까?`
-    );
-    if (!confirmation) return;
+ // 일괄 투표 처리
+const handleBulkVote = async () => {
+  if (selectedVotes.length === 0) {
+    alert("투표할 항목을 선택해주세요.");
+    return;
+  }
 
-    try {
-      await axios.post("http://localhost:3001/api/vote", {
-        userId,
-        voteSettingId: currentVoteSettingId,
-        votes: selectedVotes.map(vote => ({ candidate: vote.candidate.name, choice: vote.choice })),
-      });
+ // 선택된 투표 데이터 콘솔에 출력
+console.log("선택된 투표 데이터:", JSON.stringify(selectedVotes, null, 2));
 
-      alert("일괄 투표가 완료되었습니다.");
-    } catch (error) {
-      console.error("일괄 투표 중 오류 발생:", error);
-      alert("일괄 투표에 실패했습니다. 다시 시도해주세요.");
-    }
-  };
+
+  const confirmation = window.confirm(
+    `한 번 한 결정은 바꿀 수 없습니다.\n정말 "${selectedVotes.map(
+      (vote) => `${vote.candidate.name}: ${vote.choice}`
+    ).join(', ')}"으로 투표하시겠습니까?`
+  );
+  if (!confirmation) return;
+
+  try {
+    await axios.post("http://localhost:3001/api/vote", {
+      userId,
+      voteSettingId: currentVoteSettingId,
+      votes: selectedVotes.map((vote) => ({
+        candidate: vote.candidate.name,
+        choice: vote.choice,
+      })),
+    });
+
+    alert("일괄 투표가 완료되었습니다.");
+  } catch (error) {
+    console.error("일괄 투표 중 오류 발생:", error);
+    alert("일괄 투표에 실패했습니다. 다시 시도해주세요.");
+  }
+};
+
 
   if (!userId) {
     return <div>아이디가 없습니다. 로그인 페이지로 이동하세요.</div>;
@@ -93,8 +104,17 @@ const UserMainPage = () => {
       style={{ backgroundImage: `url('/background.png')` }}
     >
       {voteData ? (
-        <div className="max-w-4xl w-full bg-white bg-opacity-80 p-6 rounded-lg shadow-lg">
-          <h2 className="text-3xl font-bold mb-8 text-gray-800 text-center">오늘의 투표</h2>
+         <div className="max-w-4xl w-full bg-white bg-opacity-80 p-6 rounded-lg shadow-lg">
+         {/* 이미지 삽입 */}
+         <div className="mb-8 text-center">
+           <img 
+             src="/exposureVote.png" 
+             alt="오늘의 투표" 
+             className="mt-5 mx-auto w-60 h-auto"
+           />
+           <p className="mt-6 text-center font-semibold text-lg text-gray-700 font-dosgothic">폭로투표</p>
+         </div>
+  
 
           {/* 투표자 목록 */}
           <div className="flex flex-col gap-6">
@@ -113,7 +133,7 @@ const UserMainPage = () => {
           {/* 일괄 투표 버튼 */}
           <div className="mt-8 text-center">
             <button
-              className="px-6 py-3 bg-green-500 text-white rounded hover:bg-green-600"
+              className="px-28 py-3 text-gray-800 font-semibold rounded font-dosgothic text-2xl"
               onClick={handleBulkVote}
             >
               투표하기
@@ -123,10 +143,10 @@ const UserMainPage = () => {
           {/* 투표 마감 기한 */}
           <div className="mt-8 text-center">
             <p className="text-lg text-gray-800">
-              <span className="font-semibold">투표 마감 기한:</span> {formatDeadline(voteData.deadline)}
+              <span className="font-semibold font-dosgothic">투표 마감 기한:</span> {formatDeadline(voteData.deadline)}
             </p>
             <p className="text-lg text-gray-800 mt-2">
-              <span className="font-semibold">남은 시간:</span> {timeLeft}
+              <span className="font-semibold font-dosgothic">남은 시간:</span> {timeLeft}
             </p>
           </div>
         </div>

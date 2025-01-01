@@ -52,14 +52,27 @@ const CandidateCard = ({ candidate, voteSettingId, userId, selectedVotes, setSel
   }, [voteSettingId, candidate.name, userId]);  // `candidate.name`만 의존성으로 추가
 
   // 투표 선택 처리
-  const handleChoiceChange = (choice) => {
-    setSelectedChoice(choice);
+// 투표 선택 처리
+const handleChoiceChange = (choice) => {
+  setSelectedChoice(choice);
 
-    // 선택된 투표 정보 상태에 추가
-    const updatedVotes = selectedVotes.filter(vote => vote.candidate.id !== candidate.id);
-    updatedVotes.push({ candidate, choice });
-    setSelectedVotes(updatedVotes);
-  };
+  // 선택된 투표 정보 상태에 추가
+  setSelectedVotes((prevVotes) => {
+    // 이미 선택된 후보자가 있는지 확인
+    const existingVoteIndex = prevVotes.findIndex((vote) => vote.candidate.name === candidate.name);
+
+    if (existingVoteIndex !== -1) {
+      // 기존 후보자 선택을 업데이트
+      const updatedVotes = [...prevVotes];
+      updatedVotes[existingVoteIndex].choice = choice;
+      return updatedVotes;
+    } else {
+      // 새로운 후보자 선택 추가
+      return [...prevVotes, { candidate, choice }];
+    }
+  });
+};
+
 
   const { 적합, 부적합, totalVotes } = voteResults;
 
@@ -71,58 +84,69 @@ const CandidateCard = ({ candidate, voteSettingId, userId, selectedVotes, setSel
 
   return (
     <div className="flex items-center bg-white border border-gray-200 rounded-lg shadow p-4 hover:shadow-md transition-shadow">
-      <img
-        src={candidate.photoUrl}
-        alt={candidate.name}
-        className="w-20 h-20 object-cover rounded-lg mr-4"
-      />
-      <div className="flex-1">
-        <p className="text-lg font-semibold text-gray-800">{candidate.name}</p>
-        <p className="text-sm text-gray-600 mt-1">{candidate.description}</p>
+  <img
+    src={candidate.photoUrl}
+    alt={candidate.name}
+    className="w-20 h-20 object-cover rounded-lg mr-4"
+  />
+  <div className="flex-1">
+    <p className="text-lg font-semibold text-gray-800 font-dosgothic">{candidate.name}</p>
+    <p className="text-sm text-gray-600 mt-1 font-dosgothic">{candidate.description}</p>
 
-        <div className="mt-4">
-          <div className="relative h-7 w-full bg-gray-400 rounded-lg overflow-hidden">
-            {/* 적합 바 */}
-            <div
-              className="absolute h-6 bg-blue-500"
-              style={{ width: `${calculatePercentage(적합)}%` }}
-            ></div>
-            {/* 부적합 바 */}
-            <div
-              className="absolute h-6 bg-red-500"
-              style={{
-                width: `${calculatePercentage(부적합)}%`,
-                left: `${calculatePercentage(적합)}%`,
-              }}
-            ></div>
-            {/* 투표율 텍스트 */}
-            <div className="absolute inset-0 flex items-center justify-between text-sm font-semibold text-white px-2">
-              <span>{`${calculatePercentage(적합).toFixed(1)}% 적합`}</span>
-              <span>{`${calculatePercentage(부적합).toFixed(1)}% 부적합`}</span>
-            </div>
-          </div>
+    <div className="mt-4">
+      {/* 투표 바 */}
+      <div className="relative h-7 w-full bg-gray-400 rounded-2xl overflow-hidden">
+        {/* 적합 바 */}
+        <div
+          className="absolute h-7 bg-gray-500"
+          style={{ width: `${calculatePercentage(적합)}%` }}
+        ></div>
+        {/* 부적합 바 */}
+        <div
+          className="absolute h-7 bg-blue-500"
+          style={{
+            width: `${calculatePercentage(부적합)}%`,
+            left: `${calculatePercentage(적합)}%`,
+          }}
+        ></div>
+        {/* 투표율 퍼센트 텍스트 */}
+        <div className="absolute inset-0 flex items-center justify-between text-xs font-semibold text-white px-2">
+          <span className="font-dosgothic">{`${calculatePercentage(적합).toFixed(1)}%`}</span>
+          <span className="font-dosgothic">{`${calculatePercentage(부적합).toFixed(1)}%`}</span>
         </div>
+      </div>
 
-        {!hasVoted && !selectedChoice ? (
-          <div className="flex gap-4 mt-4">
-            <button
-              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-              onClick={() => handleChoiceChange("적합")}
-            >
-              적합
-            </button>
-            <button
-              className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-              onClick={() => handleChoiceChange("부적합")}
-            >
-              부적합
-            </button>
-          </div>
-        ) : (
-          <p className="text-sm text-gray-500 mt-2">이미 투표하셨습니다.</p>
-        )}
+      {/* 적합/부적합 텍스트 */}
+      <div className="flex justify-between text-sm font-semibold text-gray-700 mt-2">
+        <span className="font-dosgothic">적합</span>
+        <span className="font-dosgothic">부적합</span>
       </div>
     </div>
+
+    {!hasVoted && !selectedChoice ? (
+      <div className="flex gap-4 mt-4">
+      <button
+        className="flex flex-col items-center justify-center px-4 py-2 bg-gray-800 text-blue-700 rounded hover:bg-blue-600"
+        onClick={() => handleChoiceChange("적합")}
+      >
+        <span className="text-xl font-bold font-dosgothic">適合</span>
+        <span className="text-xs mt-1 font-dosgothic">적합</span>
+      </button>
+      <button
+        className="flex flex-col items-center justify-center px-4 py-2 bg-gray-800 text-blue-700 rounded hover:bg-red-600"
+        onClick={() => handleChoiceChange("부적합")}
+      >
+        <span className="text-lg font-bold font-dosgothic">不適合</span>
+        <span className="text-xs mt-1 font-dosgothic">부적합</span>
+      </button>
+    </div>
+    
+    ) : (
+      <p className="text-sm text-gray-500 mt-2">이미 투표하셨습니다.</p>
+    )}
+  </div>
+</div>
+
   );
 };
 
