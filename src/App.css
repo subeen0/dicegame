@@ -1,3 +1,11 @@
+@font-face {
+  font-family: 'DOSGothic';
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+  src: url('/fonts/DOSGothic.ttf') format('truetype');
+}
+
 .App {
   text-align: center;
 }
@@ -22,6 +30,7 @@
   justify-content: center;
   font-size: calc(10px + 2vmin);
   color: white;
+  font-family: 'DOSGothic', sans-serif;
 }
 
 .App-link {
@@ -35,15 +44,4 @@
   to {
     transform: rotate(360deg);
   }
-}
-
-@font-face {
-  font-family: 'DOSGothic';
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-  src: url('https://cdn.jsdelivr.net/gh/fonts-archive/DOSGothic/DOSGothic.woff2') format('woff2'),
-       url('https://cdn.jsdelivr.net/gh/fonts-archive/DOSGothic/DOSGothic.woff') format('woff'),
-       url('https://cdn.jsdelivr.net/gh/fonts-archive/DOSGothic/DOSGothic.otf') format('opentype'),
-       url('https://cdn.jsdelivr.net/gh/fonts-archive/DOSGothic/DOSGothic.ttf') format('truetype');
 }

@@ -109,7 +109,7 @@ const UserMainPage = () => {
     >
       {isVoteFinished && (
         <div className="absolute inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50">
-          <p className="text-white text-3xl font-bold font-dosgothic">투표 시간이 완료되었습니다! 곧 투표 결과가 공개됩니다!</p>
+          <p className="text-white text-3xl font-bold font-dosgothic">투표 시간이 완료되었습니다! 곧 투표 결과가 공개 됩니다. </p>
         </div>
       )}
 
