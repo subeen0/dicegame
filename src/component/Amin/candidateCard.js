@@ -126,14 +126,14 @@ const handleChoiceChange = (choice) => {
     {!hasVoted && !selectedChoice ? (
       <div className="flex gap-4 mt-4">
       <button
-        className="flex flex-col items-center justify-center px-4 py-2 bg-gray-800 text-blue-700 rounded hover:bg-blue-600"
+        className="flex flex-col items-center justify-center px-4 py-2 bg-gray-800 text-blue-600 rounded hover:drop-shadow"
         onClick={() => handleChoiceChange("적합")}
       >
         <span className="text-xl font-bold font-dosgothic">適合</span>
         <span className="text-xs mt-1 font-dosgothic">적합</span>
       </button>
       <button
-        className="flex flex-col items-center justify-center px-4 py-2 bg-gray-800 text-blue-700 rounded hover:bg-red-600"
+        className="flex flex-col items-center justify-center px-4 py-2 bg-gray-800 text-blue-600 rounded hover:drop-shadow"
         onClick={() => handleChoiceChange("부적합")}
       >
         <span className="text-lg font-bold font-dosgothic">不適合</span>

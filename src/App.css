@@ -3,7 +3,7 @@
   font-weight: normal;
   font-style: normal;
   font-display: swap;
-  src: url('/fonts/DOSGothic.ttf') format('truetype');
+  src: url('/public/DOSGothic.ttf') format('truetype');
 }
 
 .App {
