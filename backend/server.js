@@ -2,20 +2,12 @@ const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const { Pool } = require("pg"); // pg 라이브러리 사용
-//const mysql = require("mysql2");
 
 const app = express();
 app.use(cors()); // CORS 설정
 app.use(bodyParser.json()); // JSON 파싱 미들웨어
 
-// MySQL 데이터베이스 연결 설정
-// const db = mysql.createConnection({
-//   host: "localhost",
-//   user: "root",
-//   password: "1234",
-//   database: "vote_system"
-// });
-
+// PostgreSQL 연결 설정
 const pool = new Pool({
   user: "neondb_owner",
   host: "ep-summer-wind-a41l8ve9-pooler.us-east-1.aws.neon.tech",
@@ -24,7 +16,6 @@ const pool = new Pool({
   port: 5432,
   ssl: { rejectUnauthorized: false },  // SSL 설정 추가
 });
-
 
 // PostgreSQL 연결
 pool.connect((err, client, done) => {
@@ -35,84 +26,78 @@ pool.connect((err, client, done) => {
   console.log("PostgreSQL 데이터베이스에 연결되었습니다.");
 });
 
-// // MySQL 연결
-// db.connect((err) => {
-//   if (err) {
-//     console.error("데이터베이스 연결 실패:", err);
-//     return;
-//   }
-//   console.log("MySQL 데이터베이스에 연결되었습니다.");
-// });
-
 // 후보자 등록 API
 app.post("/api/candidates", (req, res) => {
   const { name, description, photoUrl } = req.body;
 
-  const query = "INSERT INTO candidates (name, description, photoUrl) VALUES (?, ?, ?)";
-  pool.query(query, [name, description, photoUrl], (err, result) => {
-    if (err) {
+  const query = "INSERT INTO candidates (name, description, photoUrl) VALUES ($1, $2, $3) RETURNING id";
+  pool.query(query, [name, description, photoUrl])
+    .then((result) => {
+      res.status(200).json({ id: result.rows[0].id, name, description, photoUrl });
+    })
+    .catch((err) => {
       console.error("후보자 등록 중 오류:", err);
       return res.status(500).json({ error: "후보자 등록 실패" });
-    }
-    res.status(200).json({ id: result.insertId, name, description, photoUrl });
-  });
+    });
 });
 
 // 후보자 목록 조회 API
 app.get("/api/candidates", (req, res) => {
   const query = "SELECT * FROM candidates";
-  pool.query(query, (err, results) => {
-    if (err) {
+  pool.query(query)
+    .then((results) => {
+      res.status(200).json(results.rows); // PostgreSQL에서 가져온 후보자 목록 반환
+    })
+    .catch((err) => {
       console.error("후보자 목록 조회 중 오류:", err);
       return res.status(500).json({ error: "후보자 목록 조회 실패" });
-    }
-    res.status(200).json(results); // MySQL에서 가져온 후보자 목록 반환
-  });
+    });
 });
 
 // 후보자 삭제 API
 app.delete("/api/candidates/:id", (req, res) => {
   const { id } = req.params;
 
-  const query = "DELETE FROM candidates WHERE id = ?";
-  pool.query(query, [id], (err, result) => {
-    if (err) {
+  const query = "DELETE FROM candidates WHERE id = $1";
+  pool.query(query, [id])
+    .then((result) => {
+      if (result.rowCount === 0) {
+        return res.status(404).json({ error: "해당 후보자를 찾을 수 없습니다." });
+      }
+      res.status(200).json({ message: "후보자가 삭제되었습니다." });
+    })
+    .catch((err) => {
       console.error("후보자 삭제 중 오류:", err);
       return res.status(500).json({ error: "후보자 삭제 실패" });
-    }
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: "해당 후보자를 찾을 수 없습니다." });
-    }
-
-    res.status(200).json({ message: "후보자가 삭제되었습니다." });
-  });
+    });
 });
 
 // 오늘의 투표 설정 API (투표자 리스트와 마감 기한 설정)
 app.post("/api/set-vote", (req, res) => {
   const { candidates, deadline } = req.body;
 
-  const query = "INSERT INTO vote_settings (candidates, deadline) VALUES (?, ?)";
-  pool.query(query, [JSON.stringify(candidates), deadline], (err) => {
-    if (err) {
+  const query = "INSERT INTO vote_settings (candidates, deadline) VALUES ($1, $2)";
+  pool.query(query, [JSON.stringify(candidates), deadline])
+    .then(() => {
+      res.status(200).json({ message: "투표 설정이 완료되었습니다." });
+    })
+    .catch((err) => {
       console.error("투표 설정 중 오류:", err);
       return res.status(500).json({ error: "투표 설정 실패" });
-    }
-    res.status(200).json({ message: "투표 설정이 완료되었습니다." });
-  });
+    });
 });
 
 // 오늘의 투표 데이터 조회 API (가장 최근 투표 설정)
 app.get("/api/get-vote", (req, res) => {
   const query = "SELECT * FROM vote_settings ORDER BY id DESC LIMIT 1";
-  pool.query(query, (err, results) => {
-    if (err) {
+  pool.query(query)
+    .then((results) => {
+      res.status(200).json(results.rows[0]); // 가장 최근의 투표 설정 반환
+    })
+    .catch((err) => {
       console.error("투표 설정 조회 중 오류:", err);
       return res.status(500).json({ error: "투표 설정 조회 실패" });
-    }
-    res.status(200).json(results[0]); // 가장 최근의 투표 설정 반환
-  });
+    });
 });
 
 // 투표 상태 확인 API: 특정 투표 세션에서 사용자가 이미 투표했는지 확인
@@ -122,18 +107,18 @@ app.get("/api/vote-status", (req, res) => {
   const query = `
     SELECT COUNT(*) AS voteCount 
     FROM vote_results 
-    WHERE user_id = ? AND vote_setting_id = ?
+    WHERE user_id = $1 AND vote_setting_id = $2
   `;
 
-  pool.query(query, [userId, voteSettingId], (err, results) => {
-    if (err) {
+  pool.query(query, [userId, voteSettingId])
+    .then((results) => {
+      const hasVoted = results.rows[0].votecount > 0;
+      res.status(200).json({ hasVoted });
+    })
+    .catch((err) => {
       console.error("투표 상태 확인 중 오류:", err);
       return res.status(500).json({ error: "투표 상태 확인 실패" });
-    }
-
-    const hasVoted = results[0].voteCount > 0;
-    res.status(200).json({ hasVoted }); // 이미 투표했다면 true 반환
-  });
+    });
 });
 
 // 유저 투표 저장 API (중복 투표 방지 로직 추가)
@@ -148,54 +133,50 @@ app.post("/api/vote", (req, res) => {
   const checkQuery = `
     SELECT COUNT(*) AS voteCount 
     FROM vote_results 
-    WHERE user_id = ? AND vote_setting_id = ?
+    WHERE user_id = $1 AND vote_setting_id = $2
   `;
 
-  pool.query(checkQuery, [userId, voteSettingId], (err, results) => {
-    if (err) {
+  pool.query(checkQuery, [userId, voteSettingId])
+    .then((results) => {
+      if (results.rows[0].votecount > 0) {
+        return res.status(400).json({ error: "이미 해당 투표 세션에서 투표를 완료했습니다." });
+      }
+
+      // 중복 투표가 아닌 경우 투표 저장
+      const insertQuery = `
+        INSERT INTO vote_results (user_id, vote_setting_id, candidate_name, choice) 
+        VALUES ($1, $2, $3, $4)
+      `;
+      const promises = votes.map(({ candidate, choice }) =>
+        pool.query(insertQuery, [userId, voteSettingId, candidate, choice])
+      );
+
+      Promise.all(promises)
+        .then(() => res.json({ message: "투표가 성공적으로 저장되었습니다." }))
+        .catch((err) => {
+          console.error("투표 저장 중 오류:", err);
+          res.status(500).json({ error: "투표 저장 실패" });
+        });
+    })
+    .catch((err) => {
       console.error("투표 여부 확인 중 오류:", err);
       return res.status(500).json({ error: "투표 여부 확인 실패" });
-    }
-
-    if (results[0].voteCount > 0) {
-      return res.status(400).json({ error: "이미 해당 투표 세션에서 투표를 완료했습니다." });
-    }
-
-    // 중복 투표가 아닌 경우 투표 저장
-    const insertQuery = `
-      INSERT INTO vote_results (user_id, vote_setting_id, candidate_name, choice) 
-      VALUES (?, ?, ?, ?)
-    `;
-    const promises = votes.map(({ candidate, choice }) =>
-      new Promise((resolve, reject) => {
-        pool.query(insertQuery, [userId, voteSettingId, candidate, choice], (err, result) => {
-          if (err) reject(err);
-          else resolve(result);
-        });
-      })
-    );
-
-    Promise.all(promises)
-      .then(() => res.json({ message: "투표가 성공적으로 저장되었습니다." }))
-      .catch((err) => {
-        console.error("투표 저장 중 오류:", err);
-        res.status(500).json({ error: "투표 저장 실패" });
-      });
-  });
+    });
 });
 
 // 특정 투표 결과 조회 API
 app.get("/api/vote-results/:voteSettingId", (req, res) => {
   const { voteSettingId } = req.params;
 
-  const query = "SELECT * FROM vote_results WHERE vote_setting_id = ?";
-  pool.query(query, [voteSettingId], (err, results) => {
-    if (err) {
+  const query = "SELECT * FROM vote_results WHERE vote_setting_id = $1";
+  pool.query(query, [voteSettingId])
+    .then((results) => {
+      res.status(200).json(results.rows);
+    })
+    .catch((err) => {
       console.error("투표 결과 조회 중 오류:", err);
       return res.status(500).json({ error: "투표 결과 조회 실패" });
-    }
-    res.status(200).json(results);
-  });
+    });
 });
 
 // 전체 투표 결과 조회 API
@@ -206,14 +187,16 @@ app.get("/api/vote-results", (req, res) => {
     JOIN vote_settings vs ON vr.vote_setting_id = vs.id
     ORDER BY vr.vote_setting_id, vr.user_id;
   `;
-  pool.query(query, (err, results) => {
-    if (err) {
+  pool.query(query)
+    .then((results) => {
+      res.status(200).json(results.rows);
+    })
+    .catch((err) => {
       console.error("투표 결과 조회 중 오류:", err);
       return res.status(500).json({ error: "투표 결과 조회 실패" });
-    }
-    res.status(200).json(results);
-  });
+    });
 });
+
 // 특정 투표 세션의 후보별 투표수 집계 API
 app.get("/api/vote-counts/:voteSettingId", (req, res) => {
   const { voteSettingId } = req.params;
@@ -224,32 +207,27 @@ app.get("/api/vote-counts/:voteSettingId", (req, res) => {
       choice, 
       COUNT(*) AS voteCount 
     FROM vote_results 
-    WHERE vote_setting_id = ?
+    WHERE vote_setting_id = $1
     GROUP BY candidate_name, choice
   `;
 
-  pool.query(query, [voteSettingId], (err, results) => {
-    if (err) {
+  pool.query(query, [voteSettingId])
+    .then((results) => {
+      const formattedResults = results.rows.reduce((acc, { candidate_name, choice, votecount }) => {
+        if (!acc[candidate_name]) {
+          acc[candidate_name] = {};
+        }
+        acc[candidate_name][choice] = votecount;
+        return acc;
+      }, {});
+
+      res.status(200).json(formattedResults);
+    })
+    .catch((err) => {
       console.error("투표 수 조회 중 오류:", err);
       return res.status(500).json({ error: "투표 수 조회 실패" });
-    }
-
-    // 데이터 가공 (필요시)
-    const formattedResults = results.reduce((acc, { candidate_name, choice, voteCount }) => {
-      if (!acc[candidate_name]) {
-        acc[candidate_name] = {};
-      }
-      acc[candidate_name][choice] = voteCount;
-      return acc;
-    }, {});
-
-    // 콘솔에 데이터 출력
-    console.log("투표 결과 데이터:", formattedResults);
-
-    res.status(200).json(formattedResults);
-  });
+    });
 });
-
 
 // 서버 실행
 app.listen(3001, () => {
