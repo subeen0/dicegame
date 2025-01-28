@@ -1,141 +1,170 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import Header from "../component/Amin/header";
-const AdminPage = () => {
-  const [candidates, setCandidates] = useState([]); // 전체 후보자 목록
-  const [selectedCandidates, setSelectedCandidates] = useState([]); // 선택된 후보자 목록
-  const [deadline, setDeadline] = useState(""); // 투표 마감 기한 상태 관리
+import { useLocation } from "react-router-dom";
+import CandidateCard from "../component/Amin/candidateCard"; // 후보자 카드 컴포넌트
 
-  // 서버에서 후보자 목록을 가져오는 함수
+const UserMainPage = () => {
+  const location = useLocation();
+  const { userId } = location.state || {}; // 로그인한 유저 ID
+
+  const [voteData, setVoteData] = useState(null); // 오늘의 투표 데이터
+  const [timeLeft, setTimeLeft] = useState(""); // 남은 시간
+  const [currentVoteSettingId, setCurrentVoteSettingId] = useState(null); // 현재 투표 세팅 ID
+  const [selectedVotes, setSelectedVotes] = useState([]); // 선택된 투표 (후보자 및 선택)
+  const [isVoteFinished, setIsVoteFinished] = useState(false); // 투표 종료 여부
+
+  // 유저 ID가 있는 경우 로드 및 상태 초기화
   useEffect(() => {
-    const fetchCandidates = async () => {
+    if (!userId) {
+      console.log("로그인한 유저 ID가 없습니다.");
+      return;
+    }
+
+    const fetchVoteData = async () => {
       try {
-        const response = await axios.get("http://localhost:3001/api/candidates");
-        setCandidates(response.data);
+        const response = await axios.get("/api/get-vote"); // Vercel API 호출
+        setVoteData(response.data);
+        setCurrentVoteSettingId(response.data.id);
+        calculateTimeLeft(response.data.deadline); // 초기 로딩 시 남은 시간 계산
       } catch (error) {
-        console.error("후보자 목록을 가져오는 중 오류 발생:", error);
+        console.error("투표 데이터를 가져오는 중 오류 발생:", error);
       }
     };
-    fetchCandidates();
-  }, []);
 
-  // 후보자 선택 함수
-  const handleSelectCandidate = (candidate) => {
-    if (selectedCandidates.length < 3) {
-      setSelectedCandidates((prev) => [...prev, candidate]);
-    } else {
-      alert("오늘의 투표자는 최대 3명까지 선택할 수 있습니다.");
-    }
-  };
+    fetchVoteData();
+  }, [userId]);
 
-  // 후보자 선택 해제 함수
-  const handleDeselectCandidate = (id) => {
-    setSelectedCandidates((prev) =>
-      prev.filter((candidate) => candidate.id !== id)
-    );
-  };
-
-  // 마감 기한 입력값 변경 처리
-  const handleDeadlineChange = (e) => {
-    setDeadline(e.target.value); // 마감 기한 상태 업데이트
-  };
-
-  // 오늘의 투표 설정 완료
-  const handleSubmit = async () => {
-    const payload = {
-      candidates: selectedCandidates.map((candidate) => ({
-        name: candidate.name,
-        description: candidate.description,
-        photoUrl: candidate.photoUrl,
-      })),
-      deadline,
+  // 남은 시간 계산
+  const calculateTimeLeft = (deadline) => {
+    const deadlineDate = new Date(deadline);
+    const updateTimeLeft = () => {
+      const now = new Date();
+      const timeDifference = deadlineDate - now;
+      if (timeDifference <= 0) {
+        setTimeLeft("투표 마감");
+        setIsVoteFinished(true); // 투표가 종료되었으므로 상태 변경
+      } else {
+        const hours = Math.floor(timeDifference / (1000 * 60 * 60));
+        const minutes = Math.floor((timeDifference % (1000 * 60 * 60)) / (1000 * 60));
+        setTimeLeft(`${hours}시간 ${minutes}분 남음`);
+      }
     };
-  
+
+    updateTimeLeft(); // 처음에 바로 계산
+    const interval = setInterval(updateTimeLeft, 60000); // 1분마다 갱신
+
+    // 투표 마감 시간 지나면 인터벌 멈추기
+    return () => clearInterval(interval);
+  };
+
+  // 투표 마감 기한 포맷팅
+  const formatDeadline = (deadline) => {
+    const date = new Date(deadline);
+    const options = { month: "2-digit", day: "2-digit", hour: "2-digit" };
+    return date.toLocaleDateString("ko-KR", options);
+  };
+
+  // 일괄 투표 처리
+  const handleBulkVote = async () => {
+    if (selectedVotes.length === 0) {
+      alert("투표할 항목을 선택해주세요.");
+      return;
+    }
+
+    // 선택된 투표 데이터 콘솔에 출력
+    console.log("선택된 투표 데이터:", JSON.stringify(selectedVotes, null, 2));
+
+    const confirmation = window.confirm(
+      `한 번 한 결정은 바꿀 수 없습니다.\n정말 "${selectedVotes.map(
+        (vote) => `${vote.candidate.name}: ${vote.choice}`
+      ).join(', ')}"으로 투표하시겠습니까?`
+    );
+    if (!confirmation) return;
+
     try {
-      // 서버로 데이터 전송
-      await axios.post("http://localhost:3001/api/set-vote", payload);
-      console.log("투표 설정 완료:", payload);
-      alert("오늘의 투표 설정이 완료되었습니다.");
+      await axios.post("http://localhost:3001/api/vote", {
+        userId,
+        voteSettingId: currentVoteSettingId,
+        votes: selectedVotes.map((vote) => ({
+          candidate: vote.candidate.name,
+          choice: vote.choice,
+        })),
+      });
+
+      alert("일괄 투표가 완료되었습니다.");
     } catch (error) {
-      console.error("투표 설정 중 오류 발생:", error);
+      console.error("일괄 투표 중 오류 발생:", error);
+      alert("일괄 투표에 실패했습니다. 다시 시도해주세요.");
     }
   };
-  
+
+  if (!userId) {
+    return <div>아이디가 없습니다. 로그인 페이지로 이동하세요.</div>;
+  }
 
   return (
-    <div> <header>
-    <Header />
-  </header>
-    <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg">
-     
-      <h1 className="text-3xl font-semibold text-center mb-8">Admin 페이지</h1>
-
-      {/* 선택된 후보자들 */}
-      <div className="mb-8">
-        <h2 className="text-2xl font-medium mb-4">선택된 후보자들</h2>
-        <div className="flex space-x-4">
-          {selectedCandidates.map((candidate) => (
-            <div
-              key={candidate.id}
-              className="flex items-center p-2 border rounded-md bg-gray-100"
-            >
-              <span className="mr-2">{candidate.name}</span>
-              <button
-                className="text-red-500"
-                onClick={() => handleDeselectCandidate(candidate.id)}
-              >
-                선택 해제
-              </button>
-            </div>
-          ))}
+    <div
+      className="min-h-screen bg-cover bg-center flex flex-col items-center justify-center p-6 relative"
+      style={{ backgroundImage: `url('/background.png')` }}
+    >
+      {isVoteFinished && (
+        <div className="absolute inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50">
+          <p className="text-white text-3xl font-bold font-dosgothic">투표 시간이 완료되었습니다. <br/> 곧 투표 결과가 공개 됩니다! </p>
         </div>
-      </div>
+      )}
 
-      {/* 전체 후보자 목록 */}
-      <h2 className="text-2xl font-medium mb-4">전체 후보자들</h2>
-      <div className="space-y-4">
-        {candidates.map((candidate) => (
-          <div
-            key={candidate.id}
-            className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-100"
-          >
-            <div>
-              <p className="text-lg font-semibold">{candidate.name}</p>
-              <p className="text-sm text-gray-600">{candidate.description}</p>
-            </div>
+      {voteData ? (
+        <div className="max-w-4xl w-full bg-white bg-opacity-80 p-6 rounded-lg shadow-lg z-10">
+          {/* 이미지 삽입 */}
+          <div className="mb-8 text-center">
+            <img 
+              src="/exposureVote.png" 
+              alt="오늘의 투표" 
+              className="mt-5 mx-auto w-60 h-auto"
+            />
+            <p className="mt-6 text-center font-semibold text-lg text-gray-700 font-DOSGothic">폭로투표</p>
+          </div>
+
+          {/* 투표자 목록 */}
+          <div className="flex flex-col gap-6">
+            {voteData.candidates.map((candidate) => (
+              <CandidateCard
+                key={candidate.id}
+                candidate={candidate}
+                voteSettingId={currentVoteSettingId}
+                userId={userId} // 유저 ID 전달
+                selectedVotes={selectedVotes}
+                setSelectedVotes={setSelectedVotes}
+              />
+            ))}
+          </div>
+
+          {/* 일괄 투표 버튼 */}
+          <div className="mt-8 text-center">
             <button
-              onClick={() => handleSelectCandidate(candidate)}
-              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+              className="px-28 py-3 text-gray-800 font-semibold rounded font-dosgothic text-xl"
+              onClick={handleBulkVote}
+              disabled={isVoteFinished} // 투표 종료 시 버튼 비활성화
             >
-              선택
+              투표하기
             </button>
           </div>
-        ))}
-      </div>
 
-      {/* 투표 마감 기한 설정 */}
-      <div className="mt-8">
-        <h2 className="text-2xl font-medium mb-4">투표 마감 기한</h2>
-        <input
-          type="datetime-local"
-          value={deadline}
-          onChange={handleDeadlineChange}
-          className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-        />
-      </div>
-
-      {/* 제출 버튼 (투표 설정 완료 후) */}
-      <div className="mt-8 text-center">
-        <button
-          onClick={handleSubmit}
-          className="px-6 py-3 bg-green-500 text-white font-semibold rounded-md hover:bg-green-600"
-        >
-          오늘의 투표 설정 완료
-        </button>
-      </div>
-    </div>
+          {/* 투표 마감 기한 */}
+          <div className="mt-8 text-center">
+            <p className="text-lg text-gray-800">
+              <span className="font-semibold font-dosgothic">투표 마감 기한:</span> <div className="font-dosgothic text-sm">{formatDeadline(voteData.deadline)}</div>
+            </p>
+            <p className="text-lg text-gray-800 mt-2">
+              <span className="font-semibold font-dosgothic">남은 시간:</span> <div className="font-dosgothic text-sm">{timeLeft}</div>
+            </p>
+          </div>
+        </div>
+      ) : (
+        <p className="text-lg text-gray-600 text-center">오늘의 투표 정보가 없습니다.</p>
+      )}
     </div>
   );
 };
 
-export default AdminPage;
+export default UserMainPage;
