@@ -49,7 +49,7 @@ app.post("/api/candidates", (req, res) => {
   const { name, description, photoUrl } = req.body;
 
   const query = "INSERT INTO candidates (name, description, photoUrl) VALUES (?, ?, ?)";
-  db.query(query, [name, description, photoUrl], (err, result) => {
+  pool.query(query, [name, description, photoUrl], (err, result) => {
     if (err) {
       console.error("후보자 등록 중 오류:", err);
       return res.status(500).json({ error: "후보자 등록 실패" });
@@ -61,7 +61,7 @@ app.post("/api/candidates", (req, res) => {
 // 후보자 목록 조회 API
 app.get("/api/candidates", (req, res) => {
   const query = "SELECT * FROM candidates";
-  db.query(query, (err, results) => {
+  pool.query(query, (err, results) => {
     if (err) {
       console.error("후보자 목록 조회 중 오류:", err);
       return res.status(500).json({ error: "후보자 목록 조회 실패" });
@@ -75,7 +75,7 @@ app.delete("/api/candidates/:id", (req, res) => {
   const { id } = req.params;
 
   const query = "DELETE FROM candidates WHERE id = ?";
-  db.query(query, [id], (err, result) => {
+  pool.query(query, [id], (err, result) => {
     if (err) {
       console.error("후보자 삭제 중 오류:", err);
       return res.status(500).json({ error: "후보자 삭제 실패" });
@@ -94,7 +94,7 @@ app.post("/api/set-vote", (req, res) => {
   const { candidates, deadline } = req.body;
 
   const query = "INSERT INTO vote_settings (candidates, deadline) VALUES (?, ?)";
-  db.query(query, [JSON.stringify(candidates), deadline], (err) => {
+  pool.query(query, [JSON.stringify(candidates), deadline], (err) => {
     if (err) {
       console.error("투표 설정 중 오류:", err);
       return res.status(500).json({ error: "투표 설정 실패" });
@@ -106,7 +106,7 @@ app.post("/api/set-vote", (req, res) => {
 // 오늘의 투표 데이터 조회 API (가장 최근 투표 설정)
 app.get("/api/get-vote", (req, res) => {
   const query = "SELECT * FROM vote_settings ORDER BY id DESC LIMIT 1";
-  db.query(query, (err, results) => {
+  pool.query(query, (err, results) => {
     if (err) {
       console.error("투표 설정 조회 중 오류:", err);
       return res.status(500).json({ error: "투표 설정 조회 실패" });
@@ -125,7 +125,7 @@ app.get("/api/vote-status", (req, res) => {
     WHERE user_id = ? AND vote_setting_id = ?
   `;
 
-  db.query(query, [userId, voteSettingId], (err, results) => {
+  pool.query(query, [userId, voteSettingId], (err, results) => {
     if (err) {
       console.error("투표 상태 확인 중 오류:", err);
       return res.status(500).json({ error: "투표 상태 확인 실패" });
@@ -151,7 +151,7 @@ app.post("/api/vote", (req, res) => {
     WHERE user_id = ? AND vote_setting_id = ?
   `;
 
-  db.query(checkQuery, [userId, voteSettingId], (err, results) => {
+  pool.query(checkQuery, [userId, voteSettingId], (err, results) => {
     if (err) {
       console.error("투표 여부 확인 중 오류:", err);
       return res.status(500).json({ error: "투표 여부 확인 실패" });
@@ -168,7 +168,7 @@ app.post("/api/vote", (req, res) => {
     `;
     const promises = votes.map(({ candidate, choice }) =>
       new Promise((resolve, reject) => {
-        db.query(insertQuery, [userId, voteSettingId, candidate, choice], (err, result) => {
+        pool.query(insertQuery, [userId, voteSettingId, candidate, choice], (err, result) => {
           if (err) reject(err);
           else resolve(result);
         });
@@ -189,7 +189,7 @@ app.get("/api/vote-results/:voteSettingId", (req, res) => {
   const { voteSettingId } = req.params;
 
   const query = "SELECT * FROM vote_results WHERE vote_setting_id = ?";
-  db.query(query, [voteSettingId], (err, results) => {
+  pool.query(query, [voteSettingId], (err, results) => {
     if (err) {
       console.error("투표 결과 조회 중 오류:", err);
       return res.status(500).json({ error: "투표 결과 조회 실패" });
@@ -206,7 +206,7 @@ app.get("/api/vote-results", (req, res) => {
     JOIN vote_settings vs ON vr.vote_setting_id = vs.id
     ORDER BY vr.vote_setting_id, vr.user_id;
   `;
-  db.query(query, (err, results) => {
+  pool.query(query, (err, results) => {
     if (err) {
       console.error("투표 결과 조회 중 오류:", err);
       return res.status(500).json({ error: "투표 결과 조회 실패" });
@@ -228,7 +228,7 @@ app.get("/api/vote-counts/:voteSettingId", (req, res) => {
     GROUP BY candidate_name, choice
   `;
 
-  db.query(query, [voteSettingId], (err, results) => {
+  pool.query(query, [voteSettingId], (err, results) => {
     if (err) {
       console.error("투표 수 조회 중 오류:", err);
       return res.status(500).json({ error: "투표 수 조회 실패" });
