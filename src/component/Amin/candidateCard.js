@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { sql } from '@vercel/postgres';
 
 const CandidateCard = ({ candidate, voteSettingId, userId, selectedVotes, setSelectedVotes }) => {
   const [hasVoted, setHasVoted] = useState(false);
@@ -13,19 +14,39 @@ const CandidateCard = ({ candidate, voteSettingId, userId, selectedVotes, setSel
     const fetchVoteData = async () => {
       try {
         // 투표 여부 확인
-        const voteStatusResponse = await fetch(`/api/vote-status?userId=${userId}&voteSettingId=${voteSettingId}`);
-        const voteStatusData = await voteStatusResponse.json();
-        setHasVoted(voteStatusData.hasVoted);
+        const voteStatusResponse = await sql`
+          SELECT COUNT(*) AS voteCount 
+          FROM vote_results 
+          WHERE user_id = ${userId} AND vote_setting_id = ${voteSettingId}
+        `;
+        const voteStatusData = voteStatusResponse.rows[0]; 
+        setHasVoted(voteStatusData.voteCount > 0);
 
         // 투표 결과 가져오기
-        const voteCountsResponse = await fetch(`/api/vote-counts?voteSettingId=${voteSettingId}`);
-        const voteCountsData = await voteCountsResponse.json();
+        const voteCountsResponse = await sql`
+          SELECT 
+            candidate_name, 
+            choice, 
+            COUNT(*) AS voteCount 
+          FROM vote_results 
+          WHERE vote_setting_id = ${voteSettingId}
+          GROUP BY candidate_name, choice
+        `;
+        const voteCountsData = voteCountsResponse.rows; 
 
         // 후보자 이름에 대한 투표 결과 가져오기
-        const candidateVotes = voteCountsData[candidate.name] || { 적합: 0, 부적합: 0 };
+        const candidateVotes = voteCountsData.reduce((acc, row) => {
+          if (!acc[row.candidate_name]) {
+            acc[row.candidate_name] = { 적합: 0, 부적합: 0 };
+          }
+          acc[row.candidate_name][row.choice] = row.voteCount;
+          return acc;
+        }, {});
 
-        const 적합 = candidateVotes.적합 || 0;
-        const 부적합 = candidateVotes.부적합 || 0;
+        const candidateVotesForThisCandidate = candidateVotes[candidate.name] || { 적합: 0, 부적합: 0 };
+
+        const 적합 = candidateVotesForThisCandidate.적합 || 0;
+        const 부적합 = candidateVotesForThisCandidate.부적합 || 0;
 
         setVoteResults({
           적합: 적합,
