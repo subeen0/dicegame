@@ -1,28 +1,48 @@
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
-const mysql = require("mysql2");
+const { Pool } = require("pg"); // pg 라이브러리 사용
+//const mysql = require("mysql2");
 
 const app = express();
 app.use(cors()); // CORS 설정
 app.use(bodyParser.json()); // JSON 파싱 미들웨어
 
 // MySQL 데이터베이스 연결 설정
-const db = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "1234",
-  database: "vote_system"
+// const db = mysql.createConnection({
+//   host: "localhost",
+//   user: "root",
+//   password: "1234",
+//   database: "vote_system"
+// });
+
+const pool = new Pool({
+  user: "neondb_owner",
+  host: "ep-summer-wind-a41l8ve9-pooler.us-east-1.aws.neon.tech",
+  database: "neondb",
+  password: "npg_m2kyuF8URVhj",
+  port: 5432,
+  ssl: { rejectUnauthorized: false },  // SSL 설정 추가
 });
 
-// MySQL 연결
-db.connect((err) => {
+
+// PostgreSQL 연결
+pool.connect((err, client, done) => {
   if (err) {
     console.error("데이터베이스 연결 실패:", err);
     return;
   }
-  console.log("MySQL 데이터베이스에 연결되었습니다.");
+  console.log("PostgreSQL 데이터베이스에 연결되었습니다.");
 });
+
+// // MySQL 연결
+// db.connect((err) => {
+//   if (err) {
+//     console.error("데이터베이스 연결 실패:", err);
+//     return;
+//   }
+//   console.log("MySQL 데이터베이스에 연결되었습니다.");
+// });
 
 // 후보자 등록 API
 app.post("/api/candidates", (req, res) => {
