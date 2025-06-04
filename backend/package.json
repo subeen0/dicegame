@@ -1,0 +1,31 @@
+{
+  "name": "snowball-fight-backend",
+  "version": "1.0.0",
+  "description": "토스 우리동네 눈싸움 게임 백엔드",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "build": "echo 'Building frontend...' && cd ../frontend && npm run build && cp -r build ../backend/",
+    "railway-build": "npm install && npm run build"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "ws": "^8.14.2",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "keywords": [
+    "websocket",
+    "game",
+    "realtime",
+    "nodejs"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}

@@ -20,6 +20,8 @@ const CandidateCard = ({ candidate, voteSettingId, userId, selectedVotes, setSel
           WHERE user_id = ${userId} AND vote_setting_id = ${voteSettingId}
         `;
         const voteStatusData = voteStatusResponse.rows[0]; 
+      
+      
         setHasVoted(voteStatusData.voteCount > 0);
 
         // 투표 결과 가져오기
