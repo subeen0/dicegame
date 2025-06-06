@@ -1,11 +1,13 @@
+
+
 @font-face {
-  font-family: 'DOSGothic';
+  font-family: 'PopRumKiwi';
   font-weight: normal;
   font-style: normal;
   font-display: swap;
-  src: url('/public/DOSGothic.ttf') format('truetype');
-}
+  src: url('/PopRumKiwi-Telop.otf') format('truetype');
 
+}
 .App {
   text-align: center;
 }
