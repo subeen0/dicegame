@@ -360,11 +360,11 @@ const WaterGunGame = () => {
                     opacity: particle.life / particle.maxLife,
                     boxShadow: `0 0 ${particle.size * 2}px ${particle.color}`
                   }}
-                />
+                /> 
               ))
             )}
 
-            {/* 물줄기 (개선된 시각 효과) */}
+            {/* 물줄기 (개선된 시각 효과). */}
             {waterDrops.map(drop => (
               <div
                 key={drop.id}
