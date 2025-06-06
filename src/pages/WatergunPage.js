@@ -296,7 +296,7 @@ const WaterGunGame = () => {
     <div className="w-full h-screen bg-gradient-to-b from-blue-400 to-blue-600 flex flex-col items-center justify-center p-4">
       {gameState === 'start' && (
         <div className="text-center text-white">
-          <h1 className='text-5xl mb-5 font-bold'>⚖️물의 여신의 심판⚖️</h1>
+          <h1 className='text-5xl mb-5 font-bold'>⚖️물의 여신의 심판</h1>
           <p className="text-lg mb-6 opacity-90">화면을 터치해 물풍선을 맞혀 점수를 획득하세요.</p>
           <button 
             onClick={startGame}
@@ -408,13 +408,14 @@ const WaterGunGame = () => {
 
       {gameState === 'gameOver' && (
         <div className="text-center text-white">
-          <h1 className="text-4xl font-bold mb-4">🎊 게임 종료!</h1>
+          <h1 className="text-4xl font-bold mb-4">!! 게임 종료 !!</h1>
           <p className="text-3xl mb-4 font-bold text-yellow-300">최종 점수: {score}점</p>
           <p className="text-xl mb-8">
-            {score >= 5000 ? '🏆 대단해요! 물총 마스터!' : 
-             score >= 3000 ? '🎯 훌륭해요!' : 
-             score >= 1000 ? '👍 잘했어요!' : '💪 다시 도전해보세요!'}
+            {score >= 5000 ? '참, 대단하십니다아—.' : 
+             score >= 3000 ? '그리 나쁘지 않네.' : 
+             score >= 1000 ? '그럭저럭—.' : '참으로 허접한 점수군요.'}
           </p>
+          
           <div className="space-x-4">
             <button 
               onClick={startGame}
@@ -428,6 +429,7 @@ const WaterGunGame = () => {
             >
               메인으로
             </button>
+            <p className='absolute bottom-1'>※상단의 점수를 캡처해 비밀댓글로 올려주세요.※</p>
           </div>
         </div>
       )}
