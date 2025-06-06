@@ -144,7 +144,7 @@ const WaterGunGame = () => {
     const dx = drop.x - target.x;
     const dy = drop.y - target.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
-    return distance < (target.size / 8); // 충돌 범위 조정
+    return distance < (target.size / 6); // 충돌 범위 조정
   };
 
   // 게임 루프
@@ -411,9 +411,9 @@ const WaterGunGame = () => {
           <h1 className="text-4xl font-bold mb-4">!! 게임 종료 !!</h1>
           <p className="text-3xl mb-4 font-bold text-yellow-300">최종 점수: {score}점</p>
           <p className="text-xl mb-8">
-            {score >= 5000 ? '참, 대단하십니다아—.' : 
-             score >= 3000 ? '그리 나쁘지 않네.' : 
-             score >= 1000 ? '그럭저럭—.' : '참으로 허접한 점수군요.'}
+            {score >= 2000 ? '참, 대단하십니다아—.' : 
+             score >= 1000 ? '그리 나쁘지 않네.' : 
+             score >= 500 ? '그럭저럭—.' : '참으로 허접한 점수군요.'}
           </p>
           
           <div className="space-x-4">
