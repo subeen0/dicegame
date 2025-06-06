@@ -144,7 +144,7 @@ const WaterGunGame = () => {
     const dx = drop.x - target.x;
     const dy = drop.y - target.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
-    return distance < (target.size / 6); // 충돌 범위 조정
+    return distance < (target.size / 7); // 충돌 범위 조정
   };
 
   // 게임 루프
