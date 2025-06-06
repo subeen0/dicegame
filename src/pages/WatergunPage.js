@@ -429,7 +429,7 @@ const WaterGunGame = () => {
             >
               메인으로
             </button>
-            <p className='absolute bottom-1'>※상단의 점수를 캡처해 비밀댓글로 올려주세요.※</p>
+            <p className='absolute bottom-1 items-center justify-center'>※상단의 점수를 캡처해 비밀댓글로 올려주세요.※</p>
           </div>
         </div>
       )}
