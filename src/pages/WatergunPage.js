@@ -411,9 +411,9 @@ const WaterGunGame = () => {
           <h1 className="text-4xl font-bold mb-4">!! 게임 종료 !!</h1>
           <p className="text-3xl mb-4 font-bold text-yellow-300">최종 점수: {score}점</p>
           <p className="text-xl mb-8">
-            {score >= 2000 ? '참, 대단하십니다아—.' : 
-             score >= 1000 ? '그리 나쁘지 않네.' : 
-             score >= 500 ? '그럭저럭—.' : '참으로 허접한 점수군요.'}
+            {score >= 3500 ? '참, 대단하십니다아—.' : 
+             score >= 2000 ? '그리 나쁘지 않네.' : 
+             score >= 1000 ? '그럭저럭—.' : '참으로 허접한 점수군요.'}
           </p>
           
           <div className="space-x-4">
