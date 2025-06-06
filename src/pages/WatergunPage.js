@@ -144,7 +144,7 @@ const WaterGunGame = () => {
     const dx = drop.x - target.x;
     const dy = drop.y - target.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
-    return distance < (target.size / 5); // 충돌 범위 조정
+    return distance < (target.size / 8); // 충돌 범위 조정
   };
 
   // 게임 루프
@@ -296,13 +296,13 @@ const WaterGunGame = () => {
     <div className="w-full h-screen bg-gradient-to-b from-blue-400 to-blue-600 flex flex-col items-center justify-center p-4">
       {gameState === 'start' && (
         <div className="text-center text-white">
-          <h1 className='text-5xl mb-5 font-bold'>🎯 물총 게임</h1>
-          <p className="text-lg mb-6 opacity-90">화면을 터치해서 물풍선을 맞혀 점수를 획득하세요!</p>
+          <h1 className='text-5xl mb-5 font-bold'>⚖️물의 여신의 심판⚖️</h1>
+          <p className="text-lg mb-6 opacity-90">화면을 터치해 물풍선을 맞혀 점수를 획득하세요.</p>
           <button 
             onClick={startGame}
             className="bg-yellow-400 text-blue-800 px-8 py-4 rounded-full text-xl font-bold hover:bg-yellow-300 active:scale-95 transition-all duration-200 shadow-lg"
           >
-            🚀 게임 시작
+            Start!
           </button>
         </div>
       )}
@@ -411,22 +411,22 @@ const WaterGunGame = () => {
           <h1 className="text-4xl font-bold mb-4">🎊 게임 종료!</h1>
           <p className="text-3xl mb-4 font-bold text-yellow-300">최종 점수: {score}점</p>
           <p className="text-xl mb-8">
-            {score >= 150 ? '🏆 대단해요! 물총 마스터!' : 
-             score >= 100 ? '🎯 훌륭해요!' : 
-             score >= 50 ? '👍 잘했어요!' : '💪 다시 도전해보세요!'}
+            {score >= 5000 ? '🏆 대단해요! 물총 마스터!' : 
+             score >= 3000 ? '🎯 훌륭해요!' : 
+             score >= 1000 ? '👍 잘했어요!' : '💪 다시 도전해보세요!'}
           </p>
           <div className="space-x-4">
             <button 
               onClick={startGame}
               className="bg-yellow-400 text-blue-800 px-8 py-4 rounded-full text-xl font-bold hover:bg-yellow-300 active:scale-95 transition-all duration-200 shadow-lg"
             >
-              🔄 다시 하기
+              다시 하기
             </button>
             <button 
               onClick={() => setGameState('start')}
               className="bg-gray-400 text-gray-800 px-8 py-4 rounded-full text-xl font-bold hover:bg-gray-300 active:scale-95 transition-all duration-200 shadow-lg"
             >
-              🏠 메인으로
+              메인으로
             </button>
           </div>
         </div>
